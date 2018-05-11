@@ -4,11 +4,12 @@
 	pip install Fancy_progressbar
 ```
 
-	[How to use]
+[How to use]
 	create a Progress_bar_handler :
-	--> import Fancy_Progress_bar as bar
-	--> bar_handler = bar.Progress_bar_handler()
-
+```python
+	import Fancy_Progress_bar as bar
+	bar_handler = bar.Progress_bar_handler()
+```
 	[Optional]
 	create an option object :
 	--> options = bar.Progress_bar_options("kill_when_finished",taskname="bar_name")

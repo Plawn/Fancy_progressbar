@@ -2,8 +2,6 @@ from time import sleep
 import sys
 import os
 from threading import Thread, Event
-import signal
-
 
 
 ## need to catch the keyboardinterrupt to stop the loop

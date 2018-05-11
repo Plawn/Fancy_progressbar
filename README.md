@@ -1,7 +1,7 @@
-How to install :
+[Installation]
 	pip install Fancy_progressbar
 
-How to use :
+[How to use]
 	create a Progress_bar_handler :
 	--> import Fancy_Progress_bar as bar
 	--> bar_handler = bar.Progress_bar_handler()

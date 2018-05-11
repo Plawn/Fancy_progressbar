@@ -45,19 +45,20 @@ You can append multiple bars to the handler :
 	
 ```python
 	#[Progress_bar]
-		update(float) 									  #updates the bar to the float
+		update(float)	#updates the bar to the float
 		set_options(Fancy_Progressbar.Progress_bar_options) #sets options using an option object
-		kill_when_finished() 							   #kill the handler its located in when finished method is called
-		style(Fancy_Term.Style) 							#sets a style from the Fancy_Term lib
-		no_style() 										 #removes the style
+		kill_when_finished()	#kill the handler its located in when finished method is called
+		style(Fancy_Term.Style)	#sets a style from the Fancy_Term lib
+		no_style()	#removes the style
 		hide()
 		show()
 		delete()
 		finish()	
-		current_task(string)								#sets the current task on a second line under the bar
-		text(string) 									   #sets text on a bar
-		blank() 											#sets a blank bar
-		print_bar()  									   #used by the handler
+		current_task(string)	#sets the current task on a second line under the bar
+		text(string)	#sets text on a bar
+		blank()	#sets a blank bar
+		print_bar()	#used by the handler
+	
 	#[Progress_bar_options]
 		add_argument(*args,**kwargs)
 		#can be used to set this options 
@@ -70,6 +71,7 @@ You can append multiple bars to the handler :
 			# done
 			# pointer (not supported yet)
 			# kill_when_finished
+	
 	#[Progress_bar_handler]
 		append()
 		remove()

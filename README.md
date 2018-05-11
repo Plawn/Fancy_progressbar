@@ -1,5 +1,7 @@
 	[Installation]
-	--> pip install Fancy_progressbar
+	--> '''
+	pip install Fancy_progressbar
+	'''
 
 	[How to use]
 	create a Progress_bar_handler :

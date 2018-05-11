@@ -1,7 +1,8 @@
 	[Installation]
-	--> '''python
+	--> 
+```shell
 	pip install Fancy_progressbar
-	'''
+```
 
 	[How to use]
 	create a Progress_bar_handler :
@@ -25,3 +26,4 @@
 
 	when all your bars are ready, start the handler :
 	--> bar_handler.start()
+

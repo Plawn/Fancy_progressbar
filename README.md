@@ -1,5 +1,5 @@
-	[Installation]
-	--> 
+[Installation]
+
 ```shell
 	pip install Fancy_progressbar
 ```

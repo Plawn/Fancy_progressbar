@@ -9,7 +9,7 @@
 ##[How to use]
 
 ```python
-	import Fancy_Progress_bar as bar
+	import Fancy_progress_bar as bar
 	bar_handler = bar.Progress_bar_handler()
 	some_bar = bar.Progress_bar()
 	bar_handler.append(some_bar)

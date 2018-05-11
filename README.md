@@ -22,6 +22,7 @@
 ```
 
 #[Optional]
+
 Create an option object :
 ```python
 	options = bar.Progress_bar_options("kill_when_finished",taskname="bar_name")

@@ -4,7 +4,9 @@ import os
 from threading import Thread, Event
 
 
-## need to catch the keyboardinterrupt to stop the loop
+"""
+	Written by <Plawn>
+"""
 
 
 
@@ -248,13 +250,15 @@ class Progress_bar_handler(Thread):
 		for i in progress_bar :
 			if 'list' in str(type(i)):
 				for bare in i :
-					self.progress_bar_list.append(bare)
-					bare.event_kill = self.event_kill
-					bare.kill_sleep = self.default_kill_sleep
+					if bare not in self.progress_bar_list :
+						self.progress_bar_list.append(bare)
+						bare.event_kill = self.event_kill
+						bare.kill_sleep = self.default_kill_sleep
 			else:
-				self.progress_bar_list.append(i)
-				i.event_kill = self.event_kill
-				i.kill_sleep = self.default_kill_sleep
+				if i not in self.progress_bar_list :
+					self.progress_bar_list.append(i)
+					i.event_kill = self.event_kill
+					i.kill_sleep = self.default_kill_sleep
 	def remove(self,progress_bar):
 		try :
 			self.progress_bar_list.remove(progress_bar)

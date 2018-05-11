@@ -51,7 +51,7 @@ You can append multiple bars to the handler :
 		update(float)	#updates the bar to the float
 		set_options(Fancy_progressbar.Progress_bar_options) #sets options using an option object
 		kill_when_finished()	#kill the handler its located in when finished method is called
-		style(Fancy_Term.Style)	#sets a style from the Fancy_term lib
+		style(Fancy_term.Style)	#sets a style from the Fancy_term lib
 		no_style()	#removes the style
 		hide()
 		show()

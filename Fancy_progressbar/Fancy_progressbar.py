@@ -77,18 +77,18 @@ class Progress_bar():
 	def __init__(self,*args,**kwargs):
 		
 
-		self.task_name = kwargs.get('label', '') + " :"
+		self.task_name = kwargs.get('taskname', '') + " :"
 		self.fill      = kwargs.get('fill', '█')[0] if len(kwargs.get('fill', '█')) > 0 else '█'
 		self.done      = False
-		self.hidden    = False
-		self.text_only = False
-		self.blankk    = False
-		self.pointer   = False	
+		self.hidden    = True if "hidden" in args else False
+		self.textd = kwargs.get("text","")
+		self.text_only = True if len(self.textd) > 0 else False
+		self.blankk    = True if "blank" in args else False
+		self.pointer   = True if "pointer" in args else False #not supported yet
 		self._style     = ""			#terminal colors
 		self.end_style  = ""			#terminal colors
-		self._kill_when_finished = False
-		self.current   = ''
-		self.textd = ""
+		self._kill_when_finished = True if "kill_when_finished" in args else False
+		self._current   = ''
 		self.progress  = 0
 		self.finished  = False
 		self._updated   = False
@@ -97,7 +97,7 @@ class Progress_bar():
 		self._end_style = "\033[m" #terminal colors
 		self.current_activated   = False
 		self.max_lenght = None
-	
+		self.style(kwargs.get('style', '') )
 		# <------------------>
 		options = kwargs.get('options',None)
 		if options != None:
@@ -148,17 +148,17 @@ class Progress_bar():
 			self.event_kill.set()
 		if not self.current_activated:
 			if kwargs.get('showing', False) or kwargs.get('message') != None:
-				self.current           = kwargs.get('message', 'Done')
+				self._current           = kwargs.get('message', 'Done')
 				self.current_activated = True
 		else:
-			self.current           = kwargs.get('message', 'Done')
+			self._current           = kwargs.get('message', 'Done')
 			self.current_activated = True
 		self.finished          = True
 		if self._kill_when_finished:
 			sleep(0.001)
-	def current_task(self,current):
-		if len(current) > 0 :
-			self.current = str(current)
+	def current(self,currentt):
+		if len(currentt) > 0 :
+			self._current = str(currentt)
 			self.current_activated = True
 	def text(self,string):
 		self.text_only = True
@@ -207,7 +207,7 @@ class Progress_bar():
 			if not self.current_activated :
 				output += bar 
 			else:
-				output += bar + "\n" + str(self.current) + " "*(length-len(str(self.current)))
+				output += bar + "\n" + str(self._current) + " "*(length-len(str(self._current)))
 		else:
 			if not self.blankk :
 				if len(self.textd) > length :

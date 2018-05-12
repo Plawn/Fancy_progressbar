@@ -1,5 +1,4 @@
-[Latest Version = 0.17]
-
+[Latest Version = 0.18]
 ##[Installation]
 
 ```shell

@@ -227,7 +227,8 @@ class Progress_bar_handler(Thread):
 		Thread.__init__(self)
 		self.event_kill = Event()
 		self.event_on_change = Event()
-		self.progress_bar_list  = progress_bar_list
+		self.progress_bar_list = []
+		
 		# self.actualisation_time = 0.5
 		self.dead               = False
 		self.paused             = False
@@ -237,6 +238,7 @@ class Progress_bar_handler(Thread):
 		self.actualisation_time = kwargs.get('refresh', 0.5)
 		# for sig in ('TERM', 'HUP', 'INT'):
 		# 	signal.signal(getattr(signal, 'SIG'+sig), quit)
+		self.append(progress_bar_list)
 		try :
 			self.preset = kwargs['preset']
 			try :

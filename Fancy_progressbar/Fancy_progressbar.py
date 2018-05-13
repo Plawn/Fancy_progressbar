@@ -21,11 +21,11 @@ def clear_line():
 	# length = int(length)
 	length = length_of_terminal()
 	console_write("\r" + " "*(length))
-	
+
 def clear_n_lines(n):
 	for i in range (n):
 		clear_line()
-		down()	
+		down()
 	for i in range (n):
 		up()
 
@@ -75,7 +75,7 @@ class Progress_bar_options():
 
 class Progress_bar():
 	def __init__(self,*args,**kwargs):
-		
+
 
 		self.task_name = kwargs.get('taskname', '') + " :"
 		self.fill      = kwargs.get('fill', '█')[0] if len(kwargs.get('fill', '█')) > 0 else '█'
@@ -173,7 +173,7 @@ class Progress_bar():
 	def print_bar(self):
 		if self.pointer :
 			try :
-				progress = self.progress[0] #not working now 
+				progress = self.progress[0] #not working now
 			except :
 				raise ValueError
 				self.done = True
@@ -181,33 +181,37 @@ class Progress_bar():
 			progress = self.progress
 		# self.length = int(os.popen('stty size', 'r').read().split()[1]) #windows command must be added
 		if self.max_lenght != None:
-			l = length_of_terminal() 
+			l = length_of_terminal()
 			if l < self.max_lenght:
 				length = l
 			else:
 				length = self.max_lenght
 		else:
 			length = length_of_terminal()
-		
+
 		output = "\r" + self._style
 		if not self.text_only:
 			dec = str(int(int((progress % 1) *100)))
 			if len(dec) == 1 :
 				dec += '0'
-			
+
 			progress_str = str(int(progress)) + dec
 			length       = int(length)-len(self.task_name)-len(str(progress_str))-len(dec)-3
 			if progress > 100 :
 				filledLength = length
 			else:
 				filledLength = int(length * progress / 100)
-			
+
 			bar   = self.task_name + self.fill * filledLength + '-' * (length - filledLength) + " " + str(int(progress))+ '.' +str(dec) + "%"
-			
+
 			if not self.current_activated :
-				output += bar 
+				output += bar
 			else:
-				output += bar + "\n" + str(self._current) + " "*(length-len(str(self._current)))
+				l = length_of_terminal()
+				bottom = (str(self._current) + " "*(l-len(str(self._current))))
+				if len(bottom) > l :
+					bottom = bottom[0:l-2] + ">>"
+				output += bar + "\n" + bottom
 		else:
 			if not self.blankk :
 				if len(self.textd) > length :
@@ -219,16 +223,16 @@ class Progress_bar():
 				return("\r" + " "*length)
 		output += self.end_style
 		return(output)
-		
 
-	
+
+
 class Progress_bar_handler(Thread):
 	def __init__(self,progress_bar_list=[],*args,**kwargs):
 		Thread.__init__(self)
 		self.event_kill = Event()
 		self.event_on_change = Event()
 		self.progress_bar_list = []
-		
+
 		# self.actualisation_time = 0.5
 		self.dead               = False
 		self.paused             = False
@@ -247,7 +251,7 @@ class Progress_bar_handler(Thread):
 				print('preset unknown -> will use default settings aka 0.5')
 		except :
 			pass
-		
+
 	def append(self,*progress_bar):
 		for i in progress_bar :
 			if 'list' in str(type(i)):
@@ -295,7 +299,7 @@ class Progress_bar_handler(Thread):
 		line = 1
 		last_one = False
 		while not self.event_kill.is_set() or not last_one:
-			
+
 			if not self.paused :
 				max_line = rows_of_terminal()
 				line = 0
@@ -341,16 +345,14 @@ class Progress_bar_handler(Thread):
 					lenght = length_of_terminal()
 					console_write(" v" * (int(lenght/2) -1 ))
 				for i in range (line) :
-					up()	
+					up()
 			if self.event_kill.is_set():
 				last_one = True
 			else:
 				self.event_kill.wait(self.actualisation_time)
-			
-		
+
+
 		for i in range (line):
 			console_write("\n")
 		self.dead = True
 		# print("shutdown complete")
-		
-

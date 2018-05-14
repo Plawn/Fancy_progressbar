@@ -318,7 +318,6 @@ class Progress_bar_handler(Thread):
                     self._auto_set(bar)
         else:
             self._auto_set(progress_bar[0])
-            print("here")
 
 
 

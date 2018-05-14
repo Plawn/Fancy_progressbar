@@ -191,6 +191,8 @@ class Progress_bar():
             self.current_activated = True
     def done(self):
         self._done = True
+    def is_finished(self):
+        return(self.finished)
     def text(self, string):
         self.text_only = True
         self.textd = string
@@ -288,7 +290,8 @@ class Progress_bar_handler(Thread):
         self.actualisation_time = kwargs.get('refresh', 0.5)
         # for sig in ('TERM', 'HUP', 'INT'):
         #     signal.signal(getattr(signal, 'SIG'+sig), quit)
-        self.append(args)
+        if len(args) > 0 :
+            self.append(args)
         try:
             self.preset = kwargs['preset']
             try:
@@ -339,7 +342,8 @@ class Progress_bar_handler(Thread):
     def kill(self):
         self.event_kill.set()
         sleep(self.default_kill_sleep)
-
+        print('killed')
+        print(self.event_kill.is_set())
     def list(self):
         return(self.progress_bar_list)
 
@@ -364,8 +368,7 @@ class Progress_bar_handler(Thread):
     def run(self):
         line = 1
         just_killed = False
-        while not self.event_kill.is_set() or just_killed:
-
+        while not self.event_kill.is_set() or not just_killed:
             if not self.paused:
                 max_line = rows_of_terminal()
                 line = 0
@@ -396,7 +399,6 @@ class Progress_bar_handler(Thread):
                             down()
                         else:
                             down()
-
                             for a_bar in self.progress_bar_list[0:max_line]:
                                 down()
                                 clear_line()
@@ -422,7 +424,6 @@ class Progress_bar_handler(Thread):
                     up()
             if self.event_kill.is_set() and not just_killed:
                 just_killed = True
-
             else:
                 self.event_kill.wait(self.actualisation_time)
 

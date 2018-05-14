@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 name='Fancy_progressbar',
-version='0.20',
+version='0.21',
 description='An easy to use multi progressbar manager',
 packages = ['Fancy_progressbar'],
 url='https://github.com/Plawn/Fancy_progressbar',

@@ -88,7 +88,7 @@ class Progress_bar():
         self.task_name = kwargs.get('taskname', '') + " :"
         self.fill = kwargs.get('fill', '█')[0] if len(
             kwargs.get('fill', '█')) > 0 else '█'
-        self.done = False
+        self._done = False
         self.hidden = True if "hidden" in args else False
         self.textd = kwargs.get("text", "")
         self.text_only = True if len(self.textd) > 0 else False
@@ -144,10 +144,10 @@ class Progress_bar():
         self.style(options.dict["kwargs"].get('style', ''))
         self.current(str(options.dict["kwargs"].get('current', '')))
         # print(self.blankk,self.text_only,self.textd,self._kill_when_finished)
-
+    def name(self,string):
+        self.task_name = string
     def kill_when_finished(self):
         self._kill_when_finished = True
-
     def no_style(self):
         self._style = ""
         self.end_style = ""
@@ -168,12 +168,12 @@ class Progress_bar():
         self.hidden = False
 
     def delete(self):
-        self.done = True
+        self._done = True
         self.hidden = True
-
     def finish(self, **kwargs):
         if self.event_kill != None and self._kill_when_finished:
             self.event_kill.set()
+            pass
         if not self.current_activated:
             if kwargs.get('showing', False) or kwargs.get('message') != None:
                 self._current = kwargs.get('message', 'Done')
@@ -189,7 +189,8 @@ class Progress_bar():
         if len(currentt) > 0:
             self._current = str(currentt)
             self.current_activated = True
-
+    def done(self):
+        self._done = True
     def text(self, string):
         self.text_only = True
         self.textd = string
@@ -201,6 +202,8 @@ class Progress_bar():
     def update(self, progress):
         self.progress = progress
         self._updated = True
+    def is_done(self):
+        return(self._done)
 
     def print_bar(self):
         if self.pointer:
@@ -208,7 +211,7 @@ class Progress_bar():
                 progress = self.progress[0]  # not working now
             except:
                 raise ValueError
-                self.done = True
+                self._done = True
         else:
             progress = self.progress
         # self.length = int(os.popen('stty size', 'r').read().split()[1]) #windows command must be added
@@ -226,7 +229,7 @@ class Progress_bar():
             self._animation_counter += 1
             if self._animation_counter == len(self._animation):
                 self._animation_counter = 0
-            animation = self._animation[self._animation_counter]
+            animation = self._animation[self._animation_counter] + " "
 
         if not self.text_only:
             dec = str(int(int((progress % 1) * 100)))
@@ -235,7 +238,7 @@ class Progress_bar():
 
             progress_str = str(int(progress)) + dec
             length = int(length) - len(self.task_name) - \
-                len(str(progress_str)) - len(dec) - 3 - len(animation)
+                len(str(progress_str)) - len(dec) - 3 - len(animation) - 1
             if progress > 100:
                 filledLength = length
             else:
@@ -249,11 +252,11 @@ class Progress_bar():
                 output += bar
             else:
                 l = length_of_terminal()
-                bottom = (str(self._current) + " " *
-                          (l - len(str(self._current))))
+                bottom = str(self._current) + " " * (l - len(str(self._current)))
                 if len(bottom) > l:
                     bottom = bottom[0:l - 2] + ">>"
                 output += bar + "\n" + bottom
+
         else:
             if not self.blankk:
                 if len(self.textd) > length:
@@ -269,12 +272,12 @@ class Progress_bar():
 
 
 class Progress_bar_handler(Thread):
-    def __init__(self, progress_bar_list=[], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         Thread.__init__(self)
         self.event_kill = Event()
         self.event_on_change = Event()
         self.progress_bar_list = []
-
+        self.lines  = 0
         # self.actualisation_time = 0.5
         self.dead = False
         self.paused = False
@@ -285,7 +288,7 @@ class Progress_bar_handler(Thread):
         self.actualisation_time = kwargs.get('refresh', 0.5)
         # for sig in ('TERM', 'HUP', 'INT'):
         #     signal.signal(getattr(signal, 'SIG'+sig), quit)
-        self.append(progress_bar_list)
+        self.append(args)
         try:
             self.preset = kwargs['preset']
             try:
@@ -294,20 +297,32 @@ class Progress_bar_handler(Thread):
                 print('preset unknown -> will use default settings aka 0.5')
         except:
             pass
+    def _auto_set(self,bar):
+        if bar not in self.progress_bar_list:
+            self.progress_bar_list.append(bar)
+            bar.event_kill = self.event_kill
+            bar.kill_sleep = self.default_kill_sleep
+            # print("set")
 
     def append(self, *progress_bar):
-        for i in progress_bar:
-            if 'list' in str(type(i)):
-                for bare in i:
-                    if bare not in self.progress_bar_list:
-                        self.progress_bar_list.append(bare)
-                        bare.event_kill = self.event_kill
-                        bare.kill_sleep = self.default_kill_sleep
+        # Dirty AF sorry guys don't  really have more time :) at least you can enter anything :p
+        # --> you  can enter things as a list, tuple or typical *args
+        if  ('tuple' in str(type(progress_bar)) or 'list' in str(type(progress_bar))) and ('list' in str(type(progress_bar[0])) or 'tuple' in str(type(progress_bar[0]))):
+            progress_bar = progress_bar[0]
+            if  ('tuple' in str(type(progress_bar)) or 'list' in str(type(progress_bar))) and ('list' in str(type(progress_bar[0])) or 'tuple' in str(type(progress_bar[0]))):
+                progress_bar = progress_bar[0]
+                for bar in progress_bar:
+                        self._auto_set(bar)
             else:
-                if i not in self.progress_bar_list:
-                    self.progress_bar_list.append(i)
-                    i.event_kill = self.event_kill
-                    i.kill_sleep = self.default_kill_sleep
+                for bar in progress_bar:
+                    self._auto_set(bar)
+        else:
+            self._auto_set(progress_bar[0])
+            print("here")
+
+
+
+
 
     def remove(self, progress_bar):
         try:
@@ -336,7 +351,8 @@ class Progress_bar_handler(Thread):
             return(True)
         except:
             return(False)
-
+    def stop(self):
+        self.kill()
     def exchange_by_bar(self, bar1, bar2):
         try:
             index1, index2 = self.progress_bar_list.index(
@@ -348,13 +364,14 @@ class Progress_bar_handler(Thread):
 
     def run(self):
         line = 1
-        last_one = False
-        while not self.event_kill.is_set() or not last_one:
+        just_killed = False
+        while not self.event_kill.is_set() or just_killed:
 
             if not self.paused:
                 max_line = rows_of_terminal()
                 line = 0
-                new_line = len(self.progress_bar_list[0:max_line])
+                # new_line = len(self.progress_bar_list[0:max_line])
+                new_line  = 0
                 for bar in self.progress_bar_list[0:max_line]:
                     if not bar.hidden:
                         new_line += 1
@@ -369,9 +386,9 @@ class Progress_bar_handler(Thread):
                     #     if bar.finished :
                     #         self.event.set()
 
-                    if not bar.hidden:
+                    if not bar.hidden :
                         line += 1
-                        if not bar.done:
+                        if not bar._done:
                             # line += 1
                             if bar.current_activated:
                                 line += 1
@@ -380,24 +397,33 @@ class Progress_bar_handler(Thread):
                             down()
                         else:
                             down()
+
                             for a_bar in self.progress_bar_list[0:max_line]:
                                 down()
                                 clear_line()
-                                if bar.current_activated:
+                                if a_bar.current_activated:
                                     down()
                                     clear_line()
                             for a_bar in self.progress_bar_list[0:max_line]:
                                 up()
-                                if bar.current_activated:
+                                if a_bar.current_activated:
                                     up()
-                            self.progress_bar_list.remove(bar)
+                            # self.progress_bar_list.remove(bar)
+
+                for bar in self.progress_bar_list :
+                    if bar._done :
+                        self.progress_bar_list.remove(bar)
+
+
                 if new_line > max_line:
                     lenght = length_of_terminal()
                     console_write(" v" * (int(lenght / 2) - 1))
+                self.lines = new_line
                 for i in range(line):
                     up()
-            if self.event_kill.is_set():
-                last_one = True
+            if self.event_kill.is_set() and not just_killed:
+                just_killed = True
+
             else:
                 self.event_kill.wait(self.actualisation_time)
 

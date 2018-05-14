@@ -11,8 +11,11 @@
 ```python
 	import Fancy_progress_bar as bar
 	bar_handler = bar.Progress_bar_handler()
-	some_bar = bar.Progress_bar()
-	bar_handler.append(some_bar)
+	some_bar = bar.Progress_bar(some_bar)
+	or 
+	bar_handler.append(some_bar,some_other_bar)
+	or 
+	bar_handler.append([some_bar,some_other_bar])
 	bar_handler.start()
 	#to update the bar you just use the method update
 	some_bar.update(some_float)
@@ -25,8 +28,12 @@
 
 Create an option object :
 ```python
-	options = bar.Progress_bar_options("kill_when_finished",taskname="bar_name")
+	options = bar.Progress_bar_options("kill_when_finished","animated",taskname="bar_name",animation=["a","b"]) # without animation set there is a default animation
 	some_bar = bar.Progress_bar(options=options)
+	or 
+	some_bar = bar.Progress_bar(options)
+	or
+	some_bar = bar.Progress_bar("kill_when_finished","animated",taskname="bar_name",animation=["a","b"]) 
 ```
 Or
 ```python
@@ -53,14 +60,18 @@ You can append multiple bars to the handler :
 		kill_when_finished()	#kill the handler its located in when finished method is called
 		style(Fancy_term.Style)	#sets a style from the Fancy_term lib
 		no_style()	#removes the style
+		name(string) #sets the naùe of the bar
+		done() #sets done attribute to true
+		is_done() #reads done attribute
+		is_finished() #reads finished attribute
 		hide()
 		show()
 		delete()
 		finish()	
-		current_task(string)	#sets the current task on a second line under the bar
+		current(string)	#sets the current task on a second line under the bar
 		text(string)	#sets text on a bar
 		blank()	#sets a blank bar
-		print_bar()	#used by the handler
+		text(string)  #sets a bar with the string (can be used to print text while having bars)
 	
 	#[Progress_bar_options]
 		add_argument(*args,**kwargs)
@@ -81,6 +92,7 @@ You can append multiple bars to the handler :
 		pause()
 		resume()
 		kill()
+		stop() #same as kill
 		exchange_by_index(index1,index2) #exchange the order of the bar --> changes display order
 		exchange_by_bar(bar1,bar2)
 		start() #starts the handler

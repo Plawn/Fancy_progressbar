@@ -370,7 +370,7 @@ class Progress_bar_handler(Thread):
         just_killed = False
         while not self.event_kill.is_set() or not just_killed:
             if not self.paused:
-                max_line = rows_of_terminal()-1
+                max_line = rows_of_terminal()
                 line = 0
                 # new_line = len(self.progress_bar_list[0:max_line])
                 new_line  = 0
@@ -428,12 +428,7 @@ class Progress_bar_handler(Thread):
                 if new_line > max_line:
                     lenght = length_of_terminal()
                     console_write(" v" * (int(lenght / 2) - 2)+"\r")
-                    # line += 2
-                    # console_write("\rlines {} max {} new {} len {}\r".format(line,max_line,new_line,len(self.progress_bar_list)))
-                    # down()
-                # self.lines = new_line
-                # if line == max_line :
-                #     line -= 1
+
                 for i in range(line):
                     up()
             if self.event_kill.is_set() and not just_killed:

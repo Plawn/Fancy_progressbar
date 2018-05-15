@@ -1,4 +1,4 @@
-[Latest Version = 0.25]
+[Latest Version = 0.26]
 
 ##[Installation]
 

@@ -256,14 +256,14 @@ class Progress_bar():
                 l = length_of_terminal()
                 bottom = str(self._current) + " " * (l - len(str(self._current)))
                 if len(bottom) > l:
-                    bottom = bottom[0:l - 2] + ">>"
+                    bottom = bottom[0:l - 1] + ">"
                 output += bar + "\n" + bottom
 
         else:
             if not self.blankk:
                 if len(self.textd) > length:
 
-                    output += self.textd[0:length] + self.end_style
+                    output += self.textd[0:length-1] + ">" +self.end_style
                 else:
                     output += self.textd + " " * \
                         (length - len(str(self.textd)))
@@ -373,53 +373,67 @@ class Progress_bar_handler(Thread):
                 max_line = rows_of_terminal()-1
                 line = 0
                 # new_line = len(self.progress_bar_list[0:max_line])
-                new_line  = 1
-                for bar in self.progress_bar_list[0:max_line]:
+                new_line  = 0
+                # max_line2 = max_line
+                for bar in self.progress_bar_list:
                     if not bar.hidden:
                         new_line += 1
-                        if bar.current_activated:
+                        if bar.current_activated and not bar.text_only:
                             new_line += 1
+                            # max_line2 -= 1
                 if new_line != self.old_lines:
                     clear_n_lines(self.old_lines)
                     self.old_lines = new_line
 
-                for bar in self.progress_bar_list[0:max_line]:
-                    # if bar._kill_when_finished :
-                    #     if bar.finished :
-                    #         self.event.set()
 
-                    if not bar.hidden :
-                        line += 1
-                        if not bar._done:
+                n, i  = len(self.progress_bar_list), 0
+                while i < n and line < max_line-1:
+                # for bar in self.progress_bar_list:
+                    bar = self.progress_bar_list[i]
+                    # if line < max_line-1 :
+                    if True:
+
+                        if not bar.hidden :
                             # line += 1
-                            if bar.current_activated:
+                            if not bar._done:
                                 line += 1
-                            string = bar.print_bar()
-                            console_write(string)
-                            down()
-                        else:
-                            down()
-                            for a_bar in self.progress_bar_list[0:max_line]:
+                                if bar.current_activated and not bar.text_only:
+                                    line += 1
+                                    pass
+                                # string =
+                                console_write(bar.print_bar())
                                 down()
-                                clear_line()
-                                if a_bar.current_activated:
-                                    down()
-                                    clear_line()
-                            for a_bar in self.progress_bar_list[0:max_line]:
-                                up()
-                                if a_bar.current_activated:
-                                    up()
+                            else:
+                                self.progress_bar_list.remove(bar)
+                            # else:
+                            #     down()
+                            #     for a_bar in self.progress_bar_list[0:max_line]:
+                            #         down()
+                            #         clear_line()
+                            #         if a_bar.current_activated:
+                            #             down()
+                            #             clear_line()
+                            #     for a_bar in self.progress_bar_list[0:max_line]:
+                            #         up()
+                            #         if a_bar.current_activated:
+                            #             up()
+                        i += 1
                             # self.progress_bar_list.remove(bar)
 
-                for bar in self.progress_bar_list :
-                    if bar._done :
-                        self.progress_bar_list.remove(bar)
+                # for bar in self.progress_bar_list :
+                #     if bar._done :
+                #         self.progress_bar_list.remove(bar)
 
 
                 if new_line > max_line:
                     lenght = length_of_terminal()
-                    console_write(" v" * (int(lenght / 2) - 1))
-                self.lines = new_line
+                    console_write(" v" * (int(lenght / 2) - 2)+"\r")
+                    # line += 2
+                    # console_write("\rlines {} max {} new {} len {}\r".format(line,max_line,new_line,len(self.progress_bar_list)))
+                    # down()
+                # self.lines = new_line
+                # if line == max_line :
+                #     line -= 1
                 for i in range(line):
                     up()
             if self.event_kill.is_set() and not just_killed:

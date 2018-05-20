@@ -1,8 +1,37 @@
+# -*- coding: utf-8 -*-
+
+
 from time import sleep
 import sys
 import os
 from threading import Thread, Event
 
+
+
+def length_of_terminal():
+    # columns = int(subprocess.check_output(['stty', 'size']).decode().split()[1]) #linux and osx only
+    columns = os.get_terminal_size().columns  # should be bulletproof
+    return(columns)
+
+
+def rows_of_terminal():
+    rows = os.get_terminal_size().lines
+    return(rows)
+
+
+# Some What bad
+if sys.version[0:3] < "3.0":
+    import fcntl, termios, struct
+    def length_of_terminal():
+        rows, columns, hp, wp = struct.unpack('HHHH',
+            fcntl.ioctl(0, termios.TIOCGWINSZ,
+            struct.pack('HHHH', 0, 0, 0, 0)))
+        return (columns)
+    def rows_of_terminal():
+        rows, columns, hp, wp = struct.unpack('HHHH',
+            fcntl.ioctl(0, termios.TIOCGWINSZ,
+            struct.pack('HHHH', 0, 0, 0, 0)))
+        return(rows)
 
 """
     Written by <Plawn>
@@ -18,16 +47,14 @@ def clear(): return os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def clear_line():
-    # rows, length = os.popen('stty size', 'r').read().split()
-    # length = int(length)
-    length = length_of_terminal()
-    console_write("\r" + " " * (length))
+    console_write("\r" + " " * (length_of_terminal()) +"\r")
 
 
 def clear_n_lines(n):
     for i in range(n):
         clear_line()
         down()
+        clear_line()
     for i in range(n):
         up()
 
@@ -45,15 +72,7 @@ def down():
     # sys.stdout.flush()
 
 
-def length_of_terminal():
-    # columns = int(subprocess.check_output(['stty', 'size']).decode().split()[1]) #linux and osx only
-    columns = os.get_terminal_size().columns  # should be bulletproof
-    return(columns)
 
-
-def rows_of_terminal():
-    rows = os.get_terminal_size().lines
-    return(rows)
 
 
 class Progress_bar_options():
@@ -173,12 +192,12 @@ class Progress_bar():
     def finish(self, **kwargs):
         if self.event_kill != None and self._kill_when_finished:
             self.event_kill.set()
-            pass
         if not self.current_activated:
             if kwargs.get('showing', False) or kwargs.get('message') != None:
                 self._current = kwargs.get('message', 'Done')
                 self.current_activated = True
         else:
+            self.textd = kwargs.get('message', 'Done')
             self._current = kwargs.get('message', 'Done')
             self.current_activated = True
         self.finished = True
@@ -282,6 +301,7 @@ class Progress_bar_handler(Thread):
         self.lines  = 0
         # self.actualisation_time = 0.5
         self.dead = False
+        self.test  = 0
         self.paused = False
         self.old_lines = 0
         self.default_kill_sleep = 0.001
@@ -305,7 +325,6 @@ class Progress_bar_handler(Thread):
             self.progress_bar_list.append(bar)
             bar.event_kill = self.event_kill
             bar.kill_sleep = self.default_kill_sleep
-            # print("set")
 
     def append(self, *progress_bar):
         # Dirty AF sorry guys don't  really have more time :) at least you can enter anything :p
@@ -347,7 +366,7 @@ class Progress_bar_handler(Thread):
     def list(self):
         return(self.progress_bar_list)
 
-    def exchange_by_index(self, index1: int, index2: int):
+    def exchange_by_index(self, index1, index2):
         try:
             self.progress_bar_list[index1], self.progress_bar_list[
                 index2] = self.progress_bar_list[index2], self.progress_bar_list[index1]
@@ -365,78 +384,152 @@ class Progress_bar_handler(Thread):
         except:
             return(False)
 
+    # def run(self):
+    #     line = 1
+    #     just_killed = False
+    #     do_it = False
+    #     while not self.event_kill.is_set() or not just_killed:
+    #         if not self.paused:
+    #             if line < self.old_lines:
+    #                 clear_n_lines(line)
+    #                 self.old_lines = line
+    #
+    #
+    #             max_line = rows_of_terminal()
+    #             line = 0
+    #             first_line = True
+    #             new_line  = 0
+    #             n, i  = len(self.progress_bar_list), 0
+    #
+    #             # while i < n and line < max_line - 2:
+    #             #     bar = self.progress_bar_list[i]
+    #             # # for bar in self.progress_bar_list:
+    #             #     if not bar.hidden and i < max_line:
+    #             #         new_line += 1
+    #             #         if bar.current_activated and not bar.text_only:
+    #             #             new_line += 1
+    #             #     i += 1
+    #             # if line < self.old_lines:
+    #             #     clear_n_lines(self.old_lines + 2)
+    #             #     self.old_lines = new_line
+    #
+    #
+    #             n, i  = len(self.progress_bar_list), 0
+    #             while i < n and line < max_line - 2:
+    #                 bar = self.progress_bar_list[i]
+    #                 if not first_line:
+    #                     if not bar.hidden :
+    #                         if not bar._done:
+    #                             line += 1
+    #                             if bar.current_activated and not bar.text_only:
+    #                                 line += 1
+    #                                 pass
+    #                             console_write(bar.print_bar())
+    #                             down()
+    #                         else:
+    #                             self.progress_bar_list.remove(bar)
+    #                     else:
+    #                         clear_line()
+    #
+    #                     i += 1
+    #                 else:
+    #                     first_line = False
+    #                     line += 1
+    #                     clear_line()
+    #                     down()
+    #
+    #
+    #             if line == max_line - 2 :
+    #                 lenght = length_of_terminal()
+    #                 # down()
+    #                 clear_line()
+    #                 console_write(" v" * (int(lenght / 2) - 2)+"\r")
+    #                 line += 2
+    #                 up()
+    #
+    #
+    #         for i in range(line):
+    #             up()
+    #         # for i in range(new_line+1):
+    #         #     up()
+    #         # up
+    #
+    #         if self.event_kill.is_set() and not just_killed:
+    #             just_killed = True
+    #         else:
+    #             self.event_kill.wait(self.actualisation_time)
+    #
+    #     for i in range(line):
+    #         console_write("\n")
+    #     self.dead = True
+
     def run(self):
-        line = 1
         just_killed = False
+        old_lines = 0
+        final = False
         while not self.event_kill.is_set() or not just_killed:
-            if not self.paused:
-                max_line = rows_of_terminal()
-                line = 0
-                # new_line = len(self.progress_bar_list[0:max_line])
-                new_line  = 0
-                # max_line2 = max_line
-                for bar in self.progress_bar_list:
-                    if not bar.hidden:
-                        new_line += 1
-                        if bar.current_activated and not bar.text_only:
-                            new_line += 1
-                            # max_line2 -= 1
-                if new_line != self.old_lines:
-                    clear_n_lines(self.old_lines)
-                    self.old_lines = new_line
+            if not self.paused :
 
 
-                n, i  = len(self.progress_bar_list), 0
-                while i < n and line < max_line-1:
-                # for bar in self.progress_bar_list:
+
+                i, n = 0, len(self.progress_bar_list)
+                clear_line()
+                down()
+                clear_line()
+                line = 1
+                max_line = rows_of_terminal() - 2
+                while i < n  and line < max_line:
                     bar = self.progress_bar_list[i]
-                    # if line < max_line-1 :
-                    if True:
-
-                        if not bar.hidden :
-                            # line += 1
-                            if not bar._done:
+                    if not bar.hidden :
+                        if not bar._done :
+                            current_activated, text_only, print_bar = bar.current_activated,bar.text_only,bar.print_bar()
+                            line += 1
+                            console_write(print_bar)
+                            down()
+                            if current_activated and not text_only:
                                 line += 1
-                                if bar.current_activated and not bar.text_only:
-                                    line += 1
-                                    pass
-                                # string =
-                                console_write(bar.print_bar())
-                                down()
-                            else:
-                                self.progress_bar_list.remove(bar)
-                            # else:
-                            #     down()
-                            #     for a_bar in self.progress_bar_list[0:max_line]:
-                            #         down()
-                            #         clear_line()
-                            #         if a_bar.current_activated:
-                            #             down()
-                            #             clear_line()
-                            #     for a_bar in self.progress_bar_list[0:max_line]:
-                            #         up()
-                            #         if a_bar.current_activated:
-                            #             up()
-                        i += 1
-                            # self.progress_bar_list.remove(bar)
+                    i += 1
+                # down()
+                clear_line()
+                # line += 1
+                # up()
+                # console_write('\rend\r')
+                # if i < n :
 
-                # for bar in self.progress_bar_list :
-                #     if bar._done :
-                #         self.progress_bar_list.remove(bar)
+                if line > max_line - 4 :
+                    final = True
+                    console_write(" v" * (int(length_of_terminal() / 2) - 2)+"\r")
+                else:
+                    clear_line()
+                    # line += 1
+                # self.test  = line
+                    # up()
+                # if final :
+                #     old_lines += 1
+                if line < old_lines :
+                    clear_n_lines(old_lines-line)
+                # else:
+                #     clear_n_lines(1)
+
+                old_lines = line
 
 
-                if new_line > max_line:
-                    lenght = length_of_terminal()
-                    console_write(" v" * (int(lenght / 2) - 2)+"\r")
+
 
                 for i in range(line):
                     up()
+
+
+
+
+
+
+
             if self.event_kill.is_set() and not just_killed:
                 just_killed = True
             else:
                 self.event_kill.wait(self.actualisation_time)
 
         for i in range(line):
-            console_write("\n")
+            down()
         self.dead = True
-        # print("shutdown complete")

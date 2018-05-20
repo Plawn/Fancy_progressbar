@@ -1,13 +1,15 @@
-[Latest Version = 0.26]
+A python multi-progress bar handler
 
+[Latest Version = 1.0]
+=============
 ##[Installation]
-
+=============
 ```shell
 	pip install Fancy_progressbar
 ```
 
 ##[How to use]
-
+=============
 ```python
 	import Fancy_progress_bar as bar
 	bar_handler = bar.Progress_bar_handler()
@@ -25,7 +27,7 @@
 ```
 
 #[Optional]
-
+=============
 Create an option object :
 ```python
 	options = bar.Progress_bar_options("kill_when_finished","animated",taskname="bar_name",animation=["a","b"]) # without animation set there is a default animation
@@ -42,7 +44,7 @@ Or
 ```
 
 #[Others Options]
-
+=============
 You can append multiple bars to the handler :
 ```python
 	bar_handler.append(bar1,bar2)
@@ -50,7 +52,7 @@ You can append multiple bars to the handler :
 ```
 
 #[Methods available]
-	
+=============
 
 	
 ```python

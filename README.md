@@ -1,6 +1,6 @@
 A python multi-progress bar handler
 
-[Latest Version = 1.0]
+[Latest Version = 1.1]
 =============
 ##[Installation]
 =============

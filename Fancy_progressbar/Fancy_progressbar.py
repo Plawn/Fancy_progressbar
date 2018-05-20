@@ -496,7 +496,7 @@ class Progress_bar_handler(Thread):
                 # console_write('\rend\r')
                 # if i < n :
 
-                if line > max_line - 4 :
+                if line > max_line - 1 :
                     final = True
                     console_write(" v" * (int(length_of_terminal() / 2) - 2)+"\r")
                 else:

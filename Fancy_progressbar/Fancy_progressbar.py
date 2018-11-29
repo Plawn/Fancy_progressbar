@@ -42,6 +42,9 @@ else:
         return(rows)
 
 
+def order_by_attribute(L, attribute):
+    pass
+
 
 
 def console_write(string):
@@ -107,7 +110,11 @@ class Progress_bar_options():
 class Progress_bar():
     def __init__(self, *args, **kwargs):
 
-        self.task_name = kwargs.get('taskname', '') + " :"
+        self.task_name = ""
+        self.level = 0
+        self._task_name = kwargs.get('taskname','')
+        self.set_taskname()
+        # print(self.task_name)
         self.fill = kwargs.get('fill', '█')[0] if len(
             kwargs.get('fill', '█')) > 0 else '█'
         self._done = False
@@ -128,24 +135,35 @@ class Progress_bar():
         self._end_style = "\033[m"  # terminal colors
         self.current_activated = False
         self.max_lenght = None
+        
         self.style(kwargs.get('style', ''))
         self._animate = True if "animated" in args else False
         self._animation_counter = 0
         self._default_animation = ["[|]","[/]", "[-]", "[\\]"]
         self._animation = kwargs.get("animation",self._default_animation)
+        self.order = 0 # will be used for the ordered bars
+        self.coeff = 0 # to calculate the mean for the family
         # a func and its args to be executed at each refresh
         self.func = kwargs.get('func')
         self.act_func = True if self.func != None else False
         self.f_args = kwargs.get('f_args', ())
+        self.is_child = False
+        self.to_suppr = None
+        self.final = None
         # setting options
         for arg in args :
-            if "Progress_bar_options" in str(type(arg)):
+            if isinstance(arg, Progress_bar_options):
                 self.set_options(arg)
         # <------------------>
         options = kwargs.get('options', None)
         if options != None:
             self.set_options(options)
-
+    def bind_to(self, obj, final):
+        self.pointer = True
+        self.progress = obj
+        self.final = final
+    def __repr__(self):
+        return('Bar: {}'.format(self._task_name))
     def set_options(self, options):
         if "hidden" in options.dict["args"]:
             self.hidden = True
@@ -165,8 +183,7 @@ class Progress_bar():
         self.textd = options.dict["kwargs"].get('text', '')
         self.max_lenght = options.dict["kwargs"].get('max_lenght', None)
         self._animation = options.dict["kwargs"].get('animation', self._default_animation)
-        if len(self.textd) > 0:
-            self.text_only = True
+        if len(self.textd) > 0: self.text_only = True
         self.style(options.dict["kwargs"].get('style', ''))
         self.current(str(options.dict["kwargs"].get('current', '')))
         # print(self.blankk,self.text_only,self.textd,self._kill_when_finished)
@@ -175,7 +192,7 @@ class Progress_bar():
     def no_style(self):
         self._style = ""
         self.end_style = ""
-
+    def set_child(self): self.is_child = True
     def style(self, style):
         if "Style" in str(type(style)):
             self.end_style = self._end_style
@@ -184,7 +201,8 @@ class Progress_bar():
             if len(style) > 0:
                 self.end_style = self._end_style
                 self._style = style
-
+    def set_taskname(self):
+        self.task_name = '  ' * self.level + self._task_name + ' :'
     def hide(self):
         self.hidden = True
 
@@ -194,16 +212,17 @@ class Progress_bar():
     def delete(self):
         self._done = True
         self.hidden = True
+        self.to_suppr.remove(self)
     def finish(self, **kwargs):
         if self.event_kill != None and self._kill_when_finished:
             self.event_kill.set()
         if not self.current_activated:
             if kwargs.get('showing', False) or kwargs.get('message') != None:
-                self._current = kwargs.get('message', 'Done')
+                self._current = str(kwargs.get('message', 'Done'))
                 self.current_activated = True
         else:
             self.textd = kwargs.get('message', 'Done')
-            self._current = kwargs.get('message', 'Done')
+            self._current = str(kwargs.get('message', 'Done'))
             self.current_activated = True
         self.finished = True
         if self._kill_when_finished:
@@ -234,7 +253,9 @@ class Progress_bar():
     def print_bar(self):
         if self.pointer:
             try:
-                progress = self.progress[0]  # not working now
+                progress = self.progress[0] 
+                if self.final != None:
+                    progress = (progress / self.final()) * 100
             except:
                 raise ValueError
                 self._done = True
@@ -273,15 +294,15 @@ class Progress_bar():
             bar = self.task_name + animation + self.fill * filledLength + '-' * \
                 (length - filledLength) + " " + \
                 str(int(progress)) + '.' + str(dec) + "%"
-
-            if not self.current_activated:
-                output += bar
-            else:
-                l, s = length_of_terminal(), str(self._current)
-                bottom = s + " " * (l - len(s))
+            output += bar
+            # if not self.current_activated:
+            #     output += bar
+            if self.current_activated:
+                l = length_of_terminal()
+                bottom = self._current + " " * (l - len(self._current))
                 if len(bottom) > l:
                     bottom = bottom[0:l - 1] + ">"
-                output += bar + "\n" + bottom
+                output += "\n" + bottom
 
         else:
             if not self.blankk:
@@ -296,29 +317,78 @@ class Progress_bar():
         output += self.end_style
         return(output)
 
+
 class Progress_bar_family:
     def __init__(self, *args, **kwargs):
-        self.bars = args[0]
-        self.task_name = kwargs.get('taskname','')
-        self.top_bar = Progress_bar(taskname = self.task_name)
-        self.set_bars()
+        self.bars = [] #self.bars = args[0]
+        self.is_child = False
+        self.progress = 0
+        self.coeff = 0
+        self.is_set = False
+        self.level = 0
+        self.append(*args, **kwargs)
+        self.family_set = False
+        self._task_name = kwargs.get('taskname','')
+        self.task_name = ""
+        self.set_taskname()
+        self.top_bar = Progress_bar(taskname = self._task_name)
+        self.set_childs()
+        self.finished = False
+    def set_taskname(self):
+        self.task_name = '  ' * self.level + self._task_name + ' :'
+        # print('bob',task_name, self.level)
+        # if self.task_name[-2:] != " :":
+        #     task_name += ' :'
+        # self.task_name = task_name
     def __iter__(self):
         for bar in self.bars:
             yield bar
-    def set_bars(self):
-        for bar in self.bars :
-            if not "family" in str(type(bar)):
-                bar.task_name = "  " + bar.task_name
+    def __repr__(self):
+        return('Family: {}'.format(self.task_name))
+    def finish(self):
+        self.finished = True
+        self.top_bar.finish()
+    def set_childs(self, childs = None):
+        if self.is_child :
+            self.top_bar.set_taskname(self.task_name)
+        if childs is None : childs = self.bars
+        for bar in childs :
+            bar.level = self.level + 1
+            bar.set_taskname()
+            bar.set_child()
+            if isinstance(bar, Progress_bar_family):
+                bar.set_childs()
 
-
+    def set_child(self): self.is_child = True
+    
+    def current(self, string):
+        self.top_bar.current(string)
+    
+    def append(self, *args,**kwargs):
+        progress_bar_list = kwargs.get('list',[])
+        for bar in progress_bar_list :
+            self.bars.append(bar)
+            bar.to_suppr = self.bars
+        if len(args) > 0 :
+            for bar in args:
+                self.bars.append(bar)
+                bar.to_suppr = self.bars
+                progress_bar_list.append(bar)
+        self.set_childs(progress_bar_list)
+    
+    
     def update(self, u = None):
-        i = 0
+        self.progress = 0
+        i, n = 0, len(self.bars)
         for bar in self.bars:
-            if 'family' not in str(type(bar)):
-                i += bar.progress
-        self.top_bar.update(i / len(self.bars))
+            self.progress += bar.progress / n
+        self.top_bar.update(self.progress)
+
+
 
 class Progress_bar_handler(Thread):
+    """
+    """
     def __init__(self, *args, **kwargs):
         Thread.__init__(self)
         self.event_kill = Event()
@@ -337,8 +407,8 @@ class Progress_bar_handler(Thread):
         self.actualisation_time = kwargs.get('refresh', presets['default'])
         # for sig in ('TERM', 'HUP', 'INT'):
         #     signal.signal(getattr(signal, 'SIG'+sig), quit)
-        if len(args) > 0 :
-            self.append(args[0])
+        
+        self.append(*args, **kwargs)
         try:
             self.preset = kwargs['preset']
             try:
@@ -352,25 +422,21 @@ class Progress_bar_handler(Thread):
             self.progress_bar_list.append(bar)
             bar.event_kill = self.event_kill
             bar.kill_sleep = self.default_kill_sleep
-
-    def append(self, progress_bar_list):
-        # Dirty AF sorry guys don't  really have more time, at least you can enter anything
-        # --> you  can enter things as a list, tuple or typical *args
-        # if  ('tuple' in str(type(progress_bar)) or 'list' in str(type(progress_bar))) and ('list' in str(type(progress_bar[0])) or 'tuple' in str(type(progress_bar[0]))):
-        #     progress_bar = progress_bar[0]
-        #     if  ('tuple' in str(type(progress_bar)) or 'list' in str(type(progress_bar))) and ('list' in str(type(progress_bar[0])) or 'tuple' in str(type(progress_bar[0]))):
-        #         progress_bar = progress_bar[0]
-        #         for bar in progress_bar:
-        #                 self._auto_set(bar)
-        #     else:
-        #         for bar in progress_bar:
-        #             self._auto_set(bar)
-        # else:
-        #     self._auto_set(progress_bar[0])
+            bar.to_suppr   = self.progress_bar_list
+    def append(self, *args,**kwargs):
+        # print(args)
+        if len(args) > 0 :
+            for bar in args:
+                self._auto_set(bar)
+        # print(self.progress_bar_list)
+        progress_bar_list = kwargs.get('list',[])
         for bar in progress_bar_list :
             self._auto_set(bar)
+        self.re_arrange()
 
-
+    def re_arrange(self):
+        pass
+        # to order the bars in the correct order
 
 
 
@@ -423,12 +489,14 @@ class Progress_bar_handler(Thread):
                     self.lines += 1
     def _render_family(self, family):
         family.update()
-        self._render_bar(family.top_bar)
+        self._render(family.top_bar)
         for bar in family :
-            self._render_bar(bar)
+            self._render(bar)
     def _render(self, item):
-        if "family" in str(type(item)):self._render_family(item)
-        else:self._render_bar(item)
+        if isinstance(item, Progress_bar_family):
+            self._render_family(item)
+        else:
+            self._render_bar(item)
 
     def run(self):
         just_killed = False
@@ -444,19 +512,12 @@ class Progress_bar_handler(Thread):
                 max_line = rows_of_terminal() - 2
                 
                 while i < n  and self.lines < max_line:
-                    bar = self.progress_bar_list[i]
-                    self._render(bar)
-                    # if not bar.hidden :
-                    #     if not bar._done :
-                    #         current_activated, text_only, print_bar, func, act_func = bar.current_activated, bar.text_only, bar.print_bar(), bar.func, bar.act_func
-                    #         self.lines += 1
-                    #         if act_func :
-                    #             bar.func(*bar.f_args)
-                    #         console_write(print_bar)
-                    #         down()
-                    #         if current_activated and not text_only:
-                    #             self.lines += 1
-                    i += 1
+                    try:
+                        item = self.progress_bar_list[i]
+                        self._render(item)
+                        i += 1
+                    except:
+                        pass
                 
 
                 clear_line()

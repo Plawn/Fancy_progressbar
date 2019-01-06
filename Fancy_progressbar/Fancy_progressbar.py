@@ -409,14 +409,14 @@ class Progress_bar_handler(Thread):
     def _auto_set(self, bar):
         if bar not in self.progress_bar_list:
             self.progress_bar_list.append(bar)
-            if isinstance(bar ,Progress_bar_family):
+            if isinstance(bar, Progress_bar_family):
                 bar.top_bar.event_kill = self.event_kill
                 bar.top_bar.kill_sleep = self.default_kill_sleep
             else:
                 bar.event_kill = self.event_kill
                 bar.kill_sleep = self.default_kill_sleep
-            
-            bar.to_suppr = self.progress_bar_list # odd
+
+            bar.to_suppr = self.progress_bar_list  # odd
 
     def append(self, *args, **kwargs):
         for bar in kwargs.get('list', []) + [*args]:
@@ -503,7 +503,7 @@ class Progress_bar_handler(Thread):
                         " v" * (int(length_of_terminal() / 2) - 2) + "\r")
                 else:
                     clear_line()
-                
+
                 if self.lines < old_lines:
                     clear_n_lines(old_lines-self.lines)
                 old_lines = self.lines

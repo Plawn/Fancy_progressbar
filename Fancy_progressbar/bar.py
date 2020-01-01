@@ -6,10 +6,13 @@ from typing import List, Union
 from Fancy_term import Style
 
 from .options import ProgressBarOptions
-from .progress_object import Progress
 from .utils import length_of_terminal
 from .tokens import *
 
+
+# for type hinting only
+def get_progress() -> int:
+    pass
 
 class ProgressBar():
 
@@ -55,7 +58,7 @@ class ProgressBar():
         self.func = func
         self.act_func = True if self.func != None else False
 
-        self.progress_object: Progress = None
+        self.progress_callback: get_progress = None
 
         self.is_child = False
         self.to_suppr = None
@@ -63,9 +66,9 @@ class ProgressBar():
         if options != None:
             self.set_options(options)
 
-    def use_progress(self, obj: Progress):
+    def use_progress(self, obj: get_progress):
         self.pointer = True
-        self.progress_object = obj
+        self.progress_callback = obj
 
     def __repr__(self):
         return f'<Bar: {self._task_name}>'
@@ -174,7 +177,7 @@ class ProgressBar():
         return self._done
 
     def print_bar(self):
-        progress = self.progress_object.get_progress() if self.pointer else self.progress
+        progress = self.progress_callback() if self.pointer else self.progress
 
         l = length_of_terminal()
 

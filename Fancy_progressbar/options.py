@@ -1,13 +1,17 @@
+
+
 class ProgressBarOptions():
     
     default_animation = ["[|]", "[/]", "[-]", "[\\]"]
     
+    _options = ['hidden', 'blank', 'done',
+                         'pointer', "kill_when_finished", "animated"]
+
     def __init__(self, *args, **kwargs):
         
         self.options = {"taskname": '', "current": '',
                         "style": "", "max_length": None, "animation": self.default_animation}
-        self._options = ['hidden', 'blank', 'done',
-                         'pointer', "kill_when_finished", "animated"]
+
         self._args = []
         self.dict = {}
         self.add_argument(args=args, dict=kwargs)
@@ -21,4 +25,4 @@ class ProgressBarOptions():
         self.dict = {"args": self._args, "kwargs": self.options}
 
     def __repr__(self):
-        return '{}\n{}'.format(self.options, self._args)
+        return f'<ProgressBarOptions {self.options} | {self._args}>'

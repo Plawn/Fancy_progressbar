@@ -1,13 +1,23 @@
+from __future__ import annotations
+
 import time
-from .utils import length_of_terminal
-from typing import List
+from typing import List, Union
+
+from Fancy_term import Style
+
 from .options import ProgressBarOptions
+from .progress_object import Progress
+from .utils import length_of_terminal
+from .tokens import *
+
 
 class ProgressBar():
 
     _default_animation = ["[|]", "[/]", "[-]", "[\\]"]
+    _end_style = "\033[m"  # terminal color
 
-    def __init__(self, name: str, *args, fill='█', text='', style='', animation: List[str] = None, options: ProgressBarOptions = None, func=None):
+    def __init__(self, name: str, *args, fill='█', text='', style: Union[Style, ''] = '',
+                 animation: List[str] = None, options: ProgressBarOptions = None, func=None):
 
         self.task_name = ""
         self.level = 0
@@ -29,14 +39,14 @@ class ProgressBar():
         self._updated = False
         self.event_kill = None
         self.kill_sleep = 0.001
-        self._end_style = "\033[m"  # terminal color
+
         self.current_activated = False
         self.max_length = None
 
         self.style(style)
         self._animate = True if "animated" in args else False
         self._animation_counter = 0
-        
+
         self._animation = animation if animation is not None else self._default_animation
         self.order = 0  # will be used for the ordered bars
         self.coeff = 1  # to calculate the mean for the family
@@ -45,20 +55,20 @@ class ProgressBar():
         self.func = func
         self.act_func = True if self.func != None else False
 
+        self.progress_object: Progress = None
+
         self.is_child = False
         self.to_suppr = None
-        self.final = None
 
         if options != None:
             self.set_options(options)
 
-    def bind_to(self, obj, final):
+    def use_progress(self, obj: Progress):
         self.pointer = True
-        self.progress = obj
-        self.final = final
+        self.progress_object = obj
 
     def __repr__(self):
-        return('Bar: {}'.format(self._task_name))
+        return f'<Bar: {self._task_name}>'
 
     def set_options(self, options):
         if "hidden" in options.dict["args"]:
@@ -100,11 +110,11 @@ class ProgressBar():
     def set_child(self):
         self.is_child = True
 
-    def style(self, style):
-        if "Style" in str(type(style)):
+    def style(self, style: Union[Style, str]):
+        if isinstance(style, Style):
             self.end_style = self._end_style
-            self._style = style.str()
-        else:
+            self._style = style.begin()
+        elif isinstance(style, str):
             if len(style) > 0:
                 self.end_style = self._end_style
                 self._style = style
@@ -138,12 +148,9 @@ class ProgressBar():
         if self._kill_when_finished:
             time.sleep(0.001)
 
-    def current(self, currentt):
-        if isinstance(currentt, str):
-            self._current = currentt
-            self.current_activated = True
-        else:
-            raise ValueError("need to be str")
+    def current(self, current: str):
+        self._current = current
+        self.current_activated = True
 
     def done(self):
         self._done = True
@@ -151,7 +158,7 @@ class ProgressBar():
     def is_finished(self):
         return self.finished
 
-    def text(self, string):
+    def text(self, string: str):
         self.text_only = True
         self.textd = string
 
@@ -159,7 +166,7 @@ class ProgressBar():
         self.text_only = True
         self.blankk = True
 
-    def update(self, progress):
+    def update(self, progress: int):
         self.progress = progress
         self._updated = True
 
@@ -167,17 +174,8 @@ class ProgressBar():
         return self._done
 
     def print_bar(self):
-        if self.pointer:
-            try:
-                progress = self.progress[0]
-                if self.final != None:
-                    progress = (progress / self.final()) * 100
-            except:
-                self._done = True
-                raise ValueError("can't get value")
+        progress = self.progress_object.get_progress() if self.pointer else self.progress
 
-        else:
-            progress = self.progress
         l = length_of_terminal()
 
         if self.max_length != None:
